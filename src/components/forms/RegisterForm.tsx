@@ -34,23 +34,23 @@ export default function RegisterPage() {
     })
     const MutateLogin = useMutation({
         mutationFn: async () => {
-            const resp = await axios.post(`${BASEURL}/user/login`, form.getValues())
+            const resp = await axios.post(`${BASEURL}/auth/signup`, form.getValues())
             return resp.data
         }, onSuccess: (data) => {
-            toast.success("Login successful")
-            localStorage.setItem("token", data.token)
-            localStorage.setItem("role", data.role)
-            const role = data.role
-            console.log(role)
-            navigate(`/${role.toLowerCase()}/dashboard`)
+            if (data.success) {
+                toast.success("Login successful")
+                localStorage.setItem("token", data.message)
+                navigate(`/dashboard`)
+            } else {
+                toast.error(data.message)
+            }
+
         }
         ,
         onError: (error: any) => {
             toast.error(error.response.data.message)
         }
     })
-
-
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -119,7 +119,6 @@ export default function RegisterPage() {
                                             )}
                                         />
                                     </motion.div>
-
                                     <motion.div variants={itemVariants}>
                                         <FormField
                                             control={form.control}
@@ -196,7 +195,6 @@ export default function RegisterPage() {
                                 </p>
                             </form>
                         </Form>
-
                     </Card>
                 </motion.div>
             </motion.div>

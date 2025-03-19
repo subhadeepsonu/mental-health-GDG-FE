@@ -3,19 +3,25 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { BASEURL } from "@/utils/constant";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 enum Mood {
-    HAPPY = "Happy",
-    SAD = "Sad",
-    ANXIOUS = "Anxious",
-    NEUTRAL = "Neutral",
+    HAPPY = "HAPPY",
+    SAD = "SAD",
+    ANXIOUS = "ANXIOUS",
+    NEUTRAL = "NEUTRAL",
 }
 
 enum EnergyLevel {
-    LOW = "Low",
-    MEDIUM = "Medium",
-    HIGH = "High",
+    LOW = "LOW",
+    MEDIUM = "MEDIUM",
+    HIGH = "HIGH",
 }
+
 export const dailyCheckinQuestions = [
     {
         id: 1,
@@ -67,16 +73,38 @@ const formSchema = z.object({
 });
 
 export default function HealthCheckForm() {
+    const navigate = useNavigate()
     const {
         register,
         handleSubmit,
         formState: { errors },
+        getValues
     } = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
     });
 
+    const MutateCheckIN = useMutation({
+        mutationFn: async () => {
+            const resp = await axios.post(`${BASEURL}/checkin`, {
+                ...getValues()
+            }, {
+                headers: {
+                    Authorization: ` ${localStorage.getItem("token")}`
+                }
+            })
+            return resp.data
+        }, onSettled(data) {
+            if (data.success) {
+                toast.success("Checkin submitted successfully")
+                navigate("/chat")
+            } else {
+                toast.error("Something went wrong")
+            }
+        }
+    })
     const onSubmit = (data: z.infer<typeof formSchema>) => {
-        console.log("Form Data:", data);
+        MutateCheckIN.mutate()
+        console.log(data);
     };
 
     return (
@@ -132,7 +160,7 @@ export default function HealthCheckForm() {
                     </div>
                 ))}
 
-                <Button type="submit" className="w-full">
+                <Button disabled={MutateCheckIN.isPending} type="submit" className="w-full">
                     Submit Check-In
                 </Button>
             </form>

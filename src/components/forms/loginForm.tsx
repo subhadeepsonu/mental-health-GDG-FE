@@ -34,15 +34,16 @@ export default function LoginPage() {
     })
     const MutateLogin = useMutation({
         mutationFn: async () => {
-            const resp = await axios.post(`${BASEURL}/user/login`, form.getValues())
+            const resp = await axios.post(`${BASEURL}/auth/login`, form.getValues())
             return resp.data
         }, onSuccess: (data) => {
-            toast.success("Login successful")
-            localStorage.setItem("token", data.token)
-            localStorage.setItem("role", data.role)
-            const role = data.role
-            console.log(role)
-            navigate(`/${role.toLowerCase()}/dashboard`)
+            if (data.success) {
+                toast.success("Login successful")
+                localStorage.setItem("token", data.message)
+                navigate(`/dashboard`)
+            } else {
+                toast.error(data.message)
+            }
         }
         ,
         onError: (error: any) => {
